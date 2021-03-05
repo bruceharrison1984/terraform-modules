@@ -2,7 +2,7 @@ resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
   tags = merge(var.default_tags, {
-    Name = "${var.name}-igw"
+    Name = "${var.name_prefix}-igw"
   })
 }
 
@@ -14,7 +14,7 @@ resource "aws_nat_gateway" "main" {
   depends_on    = [aws_internet_gateway.main]
 
   tags = merge(var.default_tags, {
-    Name = "${var.name}-nat-${format("%03d", count.index + 1)}"
+    Name = "${var.name_prefix}-nat-${format("%03d", count.index + 1)}"
   })
 }
 
@@ -24,7 +24,7 @@ resource "aws_eip" "nat" {
   vpc = true
 
   tags = merge(var.default_tags, {
-    Name = "${var.name}-eip-${format("%03d", count.index + 1)}"
+    Name = "${var.name_prefix}-eip-${format("%03d", count.index + 1)}"
   })
 }
 
@@ -36,7 +36,7 @@ resource "aws_subnet" "private" {
   availability_zone = element(data.aws_availability_zones.available.names, count.index)
 
   tags = merge(var.default_tags, {
-    Name = "${var.name}-private-subnet-${format("%03d", count.index + 1)}"
+    Name = "${var.name_prefix}-private-subnet-${format("%03d", count.index + 1)}"
   })
 }
 
@@ -49,7 +49,7 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = merge(var.default_tags, {
-    Name = "${var.name}-public-subnet-${format("%03d", count.index + 1)}"
+    Name = "${var.name_prefix}-public-subnet-${format("%03d", count.index + 1)}"
   })
 }
 
@@ -57,7 +57,7 @@ resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
 
   tags = merge(var.default_tags, {
-    Name = "${var.name}-routing-table-public"
+    Name = "${var.name_prefix}-routing-table-public"
   })
 }
 
@@ -73,7 +73,7 @@ resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
 
   tags = merge(var.default_tags, {
-    Name = "${var.name}-routing-table-private-${format("%03d", count.index + 1)}"
+    Name = "${var.name_prefix}-routing-table-private-${format("%03d", count.index + 1)}"
   })
 }
 
