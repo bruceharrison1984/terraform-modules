@@ -1,15 +1,21 @@
+variable "az_limit" {
+  description = "Maximum number of AZs to allocate to the VPC"
+  type        = number
+}
+
+variable "cidr_range" {
+  type = string
+}
+
 variable "name_prefix" {
-  description = "Prefix added to each resource name"
+  type = string
 }
 
-variable "cidr" {
-  description = "The CIDR block for the VPC."
-}
-
-variable "default_tags" {
-  description = "Tags to be applied to resources"
+variable "kms_key_arn" {
+  description = "The ARN of the KMS key used to encrypt VPC logs"
+  type        = string
 }
 
 variable "vpc_log_retention_days" {
-  description = "How many days to keep VPC logs"
+  type = number
 }

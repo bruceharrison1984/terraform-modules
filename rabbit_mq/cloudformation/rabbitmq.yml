@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: AWS CloudFormation template to launch an AmazonMQ(RabbitMQ) instance. CF is used because Terraform does not support AmazonMQ(RabbitMQ) yet.
+
+Parameters:
+  ClusterName: 
+    Description: The name of the RabbitMQ Cluster
+    Type: String
+    MinLength: 8
+    MaxLength: 50
+  Subnets:
+    Description: Subnets that brokers will be deployed in to
+    Type: List<AWS::EC2::Subnet::Id>
+    MinLength: 1
+  SecurityGroups:
+    Description: SecurityGroups that grant access to RabbitMQ
+    Type: List<AWS::EC2::SecurityGroup::Id>
+    MinLength: 1
+  AdminUsername:
+    Description: The admin username for RabbitMQ (Can't contain commas, colons, equals signs, or spaces)
+    Type: String
+    Default: wri-admin-user
+    MinLength: 12
+  AdminPassword:
+    Description: The password to access RabbitMQ (Minimum 12 characters, at least 4 unique characters)
+    Type: String
+    Default: P@$$W0rdP@$$W0rd
+    MinLength: 12
+    NoEcho: true
+  InstanceSize:
+    Description: Size of broker instances. Anything larger than mq.t3.micro will deploy a cluster instead of a single-instance.
+    Type: String
+    Default: mq.m5.large
+    AllowedValues:
+      - mq.t3.micro
+      - mq.m5.large
+      - mq.m5.xlarge
+      - mq.m5.2xlarge
+      - mq.m5.4xlarge
+
+## If micro instance is used, then a single instance is deployed instead of a cluster
+Conditions:
+  DeployAsCluster: !Not [!Equals [!Ref InstanceSize, mq.t3.micro]]
+
+Resources:
+  RabbitBroker:
+    Properties:
+      AutoMinorVersionUpgrade: true
+      BrokerName: !Ref ClusterName
+      DeploymentMode: !If [DeployAsCluster, CLUSTER_MULTI_AZ, SINGLE_INSTANCE]
+      EngineType: RABBITMQ
+      EngineVersion: 3.8.6
+      HostInstanceType: !Ref InstanceSize
+      Logs:
+        General: true
+      MaintenanceWindowStartTime:
+        DayOfWeek: Monday
+        TimeOfDay: "00:00"
+        TimeZone: America/Chicago
+      PubliclyAccessible: false
+      SecurityGroups: !Ref SecurityGroups
+      SubnetIds: !If [DeployAsCluster, !Ref Subnets, [!Select [ 0, !Ref Subnets ]]] ## Select the first available subnet if not a cluster
+      Users: 
+        - 
+          Password: !Ref AdminPassword         
+          Username: !Ref AdminUsername
+    Type: AWS::AmazonMQ::Broker
+
+Outputs:
+  AmqpEndpoints: 
+    Description: AMQP endpoint that clients should attach to
+    Value: !Join [ ",", !GetAtt RabbitBroker.AmqpEndpoints ]
+  Arn: 
+    Description: ARN of the cluster resource
+    Value: !GetAtt RabbitBroker.Arn

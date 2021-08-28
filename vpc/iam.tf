@@ -14,9 +14,9 @@ resource "aws_iam_role" "vpc_flow_logs_role" {
     ]
   })
 
-  tags = merge(var.default_tags, {
+  tags = {
     Name = "${var.name_prefix}-vpc-flow-logs-role"
-  })
+  }
 }
 
 resource "aws_iam_role_policy" "vpc_flow_logs_policy" {
